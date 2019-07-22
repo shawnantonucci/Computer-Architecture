@@ -9,13 +9,16 @@ class CPU:
         """Construct a new CPU."""
         self.memory = [0] * 256
         self.register = [0] * 8
-        self.pc = 0
+        self.IR = 0
+        self.PC = 0
+        self.MDR = 0
+        self.MAR = 0
 
-    def ram_read(self, address):
-        return self.memory[address]
+    def ram_read(self, MAR):
+        return self.memory[MAR]
 
-    def ram_write(self, value, address):
-        self.memory[address] = value
+    def ram_write(self, MDR, MAR):
+        self.memory[MAR] = MDR
 
     def load(self):
         """Load a program into memory."""
@@ -35,7 +38,7 @@ class CPU:
         ]
 
         for instruction in program:
-            self.ram[address] = instruction
+            self.memory[address] = instruction
             address += 1
 
 
@@ -69,7 +72,31 @@ class CPU:
         print()
 
     def run(self):
-        IR = self.memory[self.pc]
-        operand_a = ram_read(IR + 1)
-        operand_b = ram_read(IR + 2)
+        running = True
 
+        while running:
+            self.IR = self.PC
+            operand_a = self.ram_read(self.IR + 1)
+            operand_b = self.ram_read(self.IR + 2)
+            # print("Loop")
+
+            if self.memory[self.IR] == 0b00000001:
+                running = False
+
+            elif self.memory[self.IR] == 0b10000010:
+                self.register[operand_a] = operand_b
+                # print("LDI")
+                self.PC += 3
+
+            elif self.memory[self.IR] == 0b01000111:
+                print(self.register[operand_a])
+                # print("PRN")
+                self.PC += 2
+
+# cpu = CPU()
+# # cpu.ram_write(20, 0)
+# print(cpu.memory)
+# # print(cpu.trace)
+# # print(cpu.ram_read(0))
+# cpu.load()
+# cpu.run()
