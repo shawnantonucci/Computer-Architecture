@@ -23,31 +23,52 @@ class CPU:
     def load(self):
         """Load a program into memory."""
 
-        address = 0
 
         # For now, we've just hardcoded a program:
+        if len(sys.argv) is not 2:
+            print(f"Sorry, no program found")
+            sys.exit(1)
+        try:
+            address = 0
+            program_name = sys.argv[1]
+            with open(program_name) as file:
+                for line in file:
+                    number = line.split("#", 1)[0]
+                    if number.strip() == "":
+                        continue
+                    num = "0b" + number
+                    print(num)
+                    self.memory[address] = int(num, 2)
+                    address +=1
+                    # print(f"{self.memory}")
+        except FileNotFoundError:
+            print("Sys.argv not found")
+            sys.exit(2)
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
 
-        for instruction in program:
-            self.memory[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.memory[address] = instruction
+        #     address += 1
 
+        print(f"{self.memory}")
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+        if op == 0b10100000:
+            self.register[reg_a] += self.register[reg_b]
         #elif op == "SUB": etc
+        elif op == 0b10100010:
+            self.register[reg_a] *= self.register[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -92,6 +113,10 @@ class CPU:
                 print(self.register[operand_a])
                 # print("PRN")
                 self.PC += 2
+
+            elif self.memory[self.IR] == 0b10100010:
+                self.alu(0b10100010, operand_a, operand_b)
+                self.PC += 3
 
 # cpu = CPU()
 # # cpu.ram_write(20, 0)
