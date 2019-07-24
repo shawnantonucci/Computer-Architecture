@@ -10,6 +10,8 @@ class CPU:
         self.register = [0] * 8
         self.ram = [0] * 256
         self.pc = 0
+        self.register[7] = len(self.ram) - 1
+        # self.register[8] = 0
 
         self.branchtable = {}
         self.branchtable[int(0b10100000)] = self.handle_ADD
@@ -20,6 +22,8 @@ class CPU:
         self.branchtable[int(0b01000111)] = self.handle_PRN
         self.branchtable[int(0b10000010)] = self.handle_LDI
         # self.branchtable[int(0b00000001)] = self.handle_HLT
+        self.branchtable[int(0b01000110)] = self.sudo_pop
+        self.branchtable[int(0b01000101)] = self.sudo_push
 
     def handle_ADD(self, operand_a, operand_b):     #  ADD
         self.alu("ADD", operand_a, operand_b)
@@ -43,8 +47,23 @@ class CPU:
         self.register[operand_a] = operand_b
         self.pc += 3
 
+    # ======== Stack functions ====== #
+    def sudo_push(self, operand_a, operand_b):      # PUSH to RAM
+        # print("SUDO PUSH")
+        # print("Reg 7: ", self.register[7])
+        self.ram[self.register[7]] = self.register[operand_a]
+        self.register[7] -= 1 # self.ram[254]
+        self.pc += 2
+
+    def sudo_pop(self, operand_a, operand_b):       # POP from RAM
+        # print("SUDO POP")
+        self.register[7] += 1
+        self.register[operand_a] = self.ram[self.register[7]]
+        self.pc += 2
+
     def dispatch(self, IR, opA, opB):
         self.branchtable[IR](opA, opB)
+
 
     def load(self):
         """Load a program into memory."""
@@ -68,6 +87,7 @@ class CPU:
                     num = '0b' + num
                     # print(num)
                     self.ram[address] = int(num, 2)
+                    # self.register[8] += 1
                     address += 1
 
             print(self.ram)
@@ -113,7 +133,7 @@ class CPU:
         ), end='')
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            print(" %02X" % self.register[i], end='')
 
         print()
 
@@ -121,12 +141,14 @@ class CPU:
         running = True
 
         while running:
+            # print(self.register[7], "From reg 7")
 
             IR = self.pc
             operand_a = self.ram_read(IR + 1)
             operand_b = self.ram_read(IR + 2)
+            # self.trace()
             if self.ram[IR] == int(0b00000001):               # HLT base case: exit loop
                 running = False
             else:
-                # print(self.ram[IR])
+                # print(self.ram, "RAM")
                 self.dispatch(self.ram[IR], operand_a, operand_b)
