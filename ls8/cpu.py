@@ -24,6 +24,8 @@ class CPU:
         # self.branchtable[int(0b00000001)] = self.handle_HLT
         self.branchtable[int(0b01000110)] = self.sudo_pop
         self.branchtable[int(0b01000101)] = self.sudo_push
+        self.branchtable[int(0b01010000)] = self.call
+        self.branchtable[int(0b00010001)] = self.ret
 
     def handle_ADD(self, operand_a, operand_b):     #  ADD
         self.alu("ADD", operand_a, operand_b)
@@ -60,6 +62,17 @@ class CPU:
         self.register[7] += 1
         self.register[operand_a] = self.ram[self.register[7]]
         self.pc += 2
+
+    def call(self, operand_a, operand_b):
+        self.ram[self.register[7]] = self.pc + 2
+        self.register[7] -= 1
+        self.pc = self.register[operand_a]
+
+    def ret(self, operand_a, operand_b):
+        self.register[7] += 1
+        self.pc = self.ram[self.register[7]]
+
+
 
     def dispatch(self, IR, opA, opB):
         self.branchtable[IR](opA, opB)
