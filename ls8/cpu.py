@@ -27,6 +27,7 @@ class CPU:
         self.branchtable[int(0b00010001)] = self.ret
         self.branchtable[int(0b01010100)] = self.jmp
         self.branchtable[int(0b01010101)] = self.jeq
+        self.branchtable[int(0b01010110)] = self.jne
 
     def handle_ADD(self, operand_a, operand_b):     #  ADD
         self.alu("ADD", operand_a, operand_b)
@@ -84,6 +85,12 @@ class CPU:
         else:
             self.pc += 2
 
+    def jne(self, operand_a, operand_b):
+        equal = self.register[6] & 0b00000001
+        if equal == 0b00000000:
+            self.jmp(operand_a, operand_b)
+        else:
+            self.pc += 2
 
 
     def dispatch(self, IR, opA, opB):
