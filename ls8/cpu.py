@@ -18,14 +18,14 @@ class CPU:
         self.branchtable[int(0b10100011)] = self.handle_SUB
         self.branchtable[int(0b10100010)] = self.handle_MUL
         self.branchtable[int(0b10100011)] = self.handle_DIV
-        # self.branchtable[int(0b01001000)] = self.handle_PRA
         self.branchtable[int(0b01000111)] = self.handle_PRN
         self.branchtable[int(0b10000010)] = self.handle_LDI
-        # self.branchtable[int(0b00000001)] = self.handle_HLT
+        self.branchtable[int(0b10100111)] = self.handle_CMP
         self.branchtable[int(0b01000110)] = self.sudo_pop
         self.branchtable[int(0b01000101)] = self.sudo_push
         self.branchtable[int(0b01010000)] = self.call
         self.branchtable[int(0b00010001)] = self.ret
+        self.branchtable[int(0b01010100)] = self.jmp
 
     def handle_ADD(self, operand_a, operand_b):     #  ADD
         self.alu("ADD", operand_a, operand_b)
@@ -39,6 +39,8 @@ class CPU:
     def handle_DIV(self, operand_a, operand_b):     # Divide
         self.alu("DIV", operand_a, operand_b)
         self.pc += 3
+    def handle_CMP(self, operand_a, operand_b):
+        self.alu("CMP", operand_a, operand_b)
 
     # def handle_PRA(self, operand_a, operand_b):     #
 
@@ -71,6 +73,9 @@ class CPU:
     def ret(self, operand_a, operand_b):
         self.register[7] += 1
         self.pc = self.ram[self.register[7]]
+
+    def jmp(self, operand_a, operand_b):
+        self.pc = self.register[operand_a]
 
 
 
@@ -127,6 +132,19 @@ class CPU:
             self.register[reg_a] *= self.register[reg_b]
         elif op == "DIV":
             self.register[reg_a] /= self.register[reg_b]
+        elif op == "CMP":
+            if self.register[reg_a] > self.register[reg_b]:
+                self.register[6] = 0b00000010
+                # print("Greater")
+                self.pc += 3
+            elif self.register[reg_a] < self.register[reg_b]:
+                self.register[6] = 0b00000100
+                # print("Less than")
+                self.pc += 3
+            elif self.register[reg_a] == self.register[reg_b]:
+                self.register[6] = 0b00000001
+                # print("Equal to")
+                self.pc += 3
         else:
             raise Exception("Unsupported ALU operation")
 
